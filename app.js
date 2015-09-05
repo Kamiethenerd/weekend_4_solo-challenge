@@ -5,15 +5,29 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var passport = require('passport');
-var seression = require('express-session');
+var session = require('express-session');
 var localStrategy = require('passport-local').Strategy;
 var mongoose = require('mongoose');
+var User = require('./models/user');
+
+//MongoDB setup
 var mongoURI = "mongodb://localhost:27017/prime_example_passport";
 var MongoDB = mongoose.connect(mongoURI).connection;
 
 
+MongoDB.on('error', function(err){
+  console.log('mongodb connection error', err);
+});
+
+MongoDB.once('open',function(){
+  console.log('mongodb connection open');
+});
+
+
+
 var routes = require('./routes/index');
 var users = require('./routes/users');
+var register = require('./routes/register');
 
 var app = express();
 
@@ -35,13 +49,28 @@ app.use(session({
   s: false,
   cookie : {maxAge: 60000, secure: false}
 }));
+
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use('/', routes);
-app.use('/users', users);
+passport.serializeUser(function(user, done){
+  done(null, user.id);
+});
 
-var User = require('./models/user');
+passport.deserializeUser(function(user,done) {
+  User.findById(id, function (err, user) {
+    if (err) {
+      done(err);
+    } else {
+      done(null, user);
+    }
+
+  });
+});
+
+
+
+
 
 passport.use('local', new localStrategy({
       passReqToCallback: true,
@@ -49,31 +78,31 @@ passport.use('local', new localStrategy({
     },
     function(req,username, password, done){
       user.findOne({username: username}, function(err, user) {
-        if (err) throw err;
+        if (err)
+          throw err;
         if (!user)
           return done(null, false, {message: 'Incorrect username and password.'});
+        //test a matching password
         user.comparePassword(password, function (err, isMatch) {
-          if (err) throw err;
-          if (isMatch)
+          if (err){
+            throw err;
+          }
+          if (isMatch){
             return done(null, user);
-          else
-            done(null, false, {message: 'Incorrect username and password.'});
-
+          } else {
+          done(null, false, {message: 'Incorrect username and password.'});
+          }
         });
       });
 
     }));
 
-passport.serializeUser(function(user, done){
-  done(null, user.id);
-});
 
-passport.deserializeUser(function(user,done){
-  User.findById(id, function(err, user){
-    if(err) done(err);
-    done(null,user);
-  });
-});
+
+app.use('/', routes);
+app.use('/users', users);
+app.use('/register', register);
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -105,8 +134,6 @@ app.use(function(err, req, res, next) {
     error: {}
   });
 });
-
-MongoBD.on('error',)
 
 
 module.exports = app;

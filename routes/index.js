@@ -5,12 +5,14 @@ var path = require('path');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+  res.render('index');
 });
 
-router.get("/,", function(req,res,next){
-  res.sendFile(path.resolve(__dirname,"../views/index.html"));
-});
+//router.get("/,", function(req,res,next){
+//  res.sendFile(path.resolve(__dirname,"../views/index.jade"));
+//});
+
+
 router.post('/',
     passport.authenticate('local', {
       successRedirect: '/users',
