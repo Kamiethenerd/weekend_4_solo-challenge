@@ -57,7 +57,7 @@ passport.serializeUser(function(user, done){
   done(null, user.id);
 });
 
-passport.deserializeUser(function(user,done) {
+passport.deserializeUser(function(id,done) {
   User.findById(id, function (err, user) {
     if (err) {
       done(err);
@@ -77,7 +77,7 @@ passport.use('local', new localStrategy({
       usernameField: 'username'
     },
     function(req,username, password, done){
-      user.findOne({username: username}, function(err, user) {
+      User.findOne({username: username}, function(err, user) {
         if (err)
           throw err;
         if (!user)
